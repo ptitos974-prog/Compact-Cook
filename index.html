@@ -199,9 +199,19 @@
             render();
 
             try {
-                const prompt = `Analyse cette recette et retourne UNIQUEMENT un objet JSON:
+                const prompt = `Tu es un expert du robot cuiseur COMPACT COOK. Analyse cette recette et adapte-la pour le Compact Cook (robot multifonction avec bol, lames, température et vitesse réglables).
+
+RECETTE À ANALYSER:
 ${state.recipeText}
-Format: {"name":"Nom","basePortions":4,"prepTime":15,"cookTime":30,"difficulty":"Facile","ingredients":[{"name":"Tomate","amount":200,"unit":"g","emoji":"🍅"}],"steps":[{"number":1,"title":"Préparation","description":"...","time":"5 min","temp":"","speed":"5"}],"tips":["Astuce"]}`;
+
+IMPORTANT: Le Compact Cook est un ROBOT CUISEUR multifonction similaire au Thermomix. Adapte TOUTES les étapes pour utiliser:
+- Les VITESSES (1-10) pour mixer, hacher, pétrir, émulsionner
+- Les TEMPÉRATURES (jusqu'à 130°C) pour cuire, mijoter, faire revenir
+- Le BOL du robot pour tout préparer dedans
+- Les accessoires: panier vapeur, batteur, spatule
+
+Retourne UNIQUEMENT ce JSON (pas de markdown, pas d'explication):
+{"name":"Nom de la recette","basePortions":4,"prepTime":15,"cookTime":30,"difficulty":"Facile","ingredients":[{"name":"Tomate","amount":200,"unit":"g","emoji":"🍅"}],"steps":[{"number":1,"title":"Préparation des ingrédients","description":"Mettre les oignons dans le bol, hacher 5 sec vitesse 5","time":"5 sec","temp":"","speed":"5","accessory":"","note":""},{"number":2,"title":"Cuisson","description":"Ajouter huile, faire revenir 3 min 100°C vitesse 1","time":"3 min","temp":"100°C","speed":"1","accessory":"","note":""}],"tips":["Conseil pour le Compact Cook"]}`;
 
                 const response = await callPerplexityAPI(prompt);
                 const recipe = extractJSON(response);
@@ -222,7 +232,18 @@ Format: {"name":"Nom","basePortions":4,"prepTime":15,"cookTime":30,"difficulty":
             render();
 
             try {
-                const prompt = `Crée une recette Compact Cook pour "${recipeName}". JSON uniquement: {"name":"${recipeName}","basePortions":4,"prepTime":20,"cookTime":40,"difficulty":"Moyen","ingredients":[{"name":"Ingrédient","amount":500,"unit":"g","emoji":"🥕"}],"steps":[{"number":1,"title":"Préparation","description":"...","time":"10 min","speed":"3"}],"tips":["Conseil"]}`;
+                const prompt = `Tu es un expert du robot cuiseur COMPACT COOK. Crée une recette complète de "${recipeName}" adaptée pour le Compact Cook (robot multifonction avec bol, lames, température et vitesse).
+
+IMPORTANT: Le Compact Cook est un ROBOT CUISEUR multifonction comme le Thermomix. Utilise:
+- VITESSES (1-10): 1-2 pour mélanger, 3-5 pour hacher/pétrir, 6-8 pour mixer, 9-10 pour pulvériser
+- TEMPÉRATURES (jusqu'à 130°C): Varoma/100°C pour vapeur, 80-90°C pour mijoter, 100-120°C pour faire revenir
+- TOUT se fait dans le BOL du robot
+- Accessoires: panier vapeur, batteur, spatule, couteau
+
+TOUTES les étapes doivent utiliser le robot (vitesse + température si besoin).
+
+Retourne UNIQUEMENT ce JSON (pas de markdown):
+{"name":"${recipeName}","basePortions":4,"prepTime":20,"cookTime":40,"difficulty":"Moyen","ingredients":[{"name":"Ingrédient","amount":500,"unit":"g","emoji":"🥕"}],"steps":[{"number":1,"title":"Préparation dans le bol","description":"Mettre les ingrédients dans le bol, hacher 10 sec vitesse 5","time":"10 sec","temp":"","speed":"5","accessory":"","note":""},{"number":2,"title":"Cuisson","description":"Cuire 20 min 100°C vitesse 1 sens inverse","time":"20 min","temp":"100°C","speed":"1","accessory":"","note":"Utiliser le gobelet doseur"}],"tips":["Astuce pour le Compact Cook"]}`;
 
                 const response = await callPerplexityAPI(prompt);
                 const recipe = extractJSON(response);
