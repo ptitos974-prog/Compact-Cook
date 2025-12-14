@@ -5,14 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Compact Cook</title>
     
-    <!-- PWA Configuration pour iPhone -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Compact Cook">
-    <link rel="apple-touch-icon" href="icon.png">
-    
-    <!-- Icônes alternatives si icon.png n'existe pas -->
-    <link rel="icon" type="image/png" sizes="192x192" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23ec4899' width='100' height='100' rx='20'/><text x='50' y='70' font-size='60' text-anchor='middle' fill='white'>🍳</text></svg>">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -42,28 +37,28 @@
     <div id="apiKeyModal" class="modal">
         <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-2xl font-bold text-gray-800">🔑 Configuration API</h2>
+                <h2 class="text-2xl font-bold text-gray-800">Configuration API</h2>
                 <button onclick="closeApiKeyModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
             </div>
             
             <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3 mb-4 rounded">
                 <p class="text-sm text-gray-700">
-                    <strong>ℹ️ Obtenir une clé API:</strong><br>
+                    <strong>Obtenir une cle API:</strong><br>
                     1. Allez sur <a href="https://www.perplexity.ai/settings/api" target="_blank" class="text-blue-600 underline">perplexity.ai/settings/api</a><br>
-                    2. Créez un compte si nécessaire<br>
-                    3. Générez une nouvelle clé API<br>
+                    2. Creez un compte si necessaire<br>
+                    3. Generez une nouvelle cle API<br>
                     4. Copiez-la ci-dessous
                 </p>
             </div>
             
             <div class="mb-4">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Clé API Perplexity:</label>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Cle API Perplexity:</label>
                 <input type="password" id="apiKeyInput" placeholder="pplx-..." 
                        class="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 outline-none">
             </div>
             
             <div class="flex gap-3">
-                <button onclick="saveApiKey()" class="flex-1 bg-gradient-to-r from-green-500 to-blue-500 text-white py-3 rounded-lg font-bold hover:scale-105 transition">💾 Enregistrer</button>
+                <button onclick="saveApiKey()" class="flex-1 bg-gradient-to-r from-green-500 to-blue-500 text-white py-3 rounded-lg font-bold hover:scale-105 transition">Enregistrer</button>
                 <button onclick="closeApiKeyModal()" class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-400 transition">Annuler</button>
             </div>
         </div>
@@ -75,14 +70,18 @@
             currentRecipe: null,
             recipeText: '',
             isLoading: false,
-            error: ''
+            error: '',
+            capturedImage: null,
+            detectedIngredients: [],
+            proposedRecipes: [],
+            showCamera: false
         };
 
         const popularRecipes = [
-            { id: 1, name: "Gâteau au Chocolat", image: "🍰🍫" },
-            { id: 2, name: "Soupe de Légumes", image: "🥣🥬" },
-            { id: 3, name: "Pâte à Pizza Maison", image: "🍕" },
-            { id: 4, name: "Mayonnaise Maison", image: "🥚🫙" },
+            { id: 1, name: "Gateau au Chocolat", image: "🍰🍫" },
+            { id: 2, name: "Soupe de Legumes", image: "🥣🥬" },
+            { id: 3, name: "Pate a Pizza Maison", image: "🍕" },
+            { id: 4, name: "Mayonnaise Maison", image: "🥚" },
             { id: 5, name: "Omelette aux Champignons", image: "🍳🍄" },
             { id: 6, name: "Salade de Fruits", image: "🥗🍎" }
         ];
@@ -103,17 +102,17 @@
         function saveApiKey() {
             const apiKey = document.getElementById('apiKeyInput').value.trim();
             if (!apiKey) {
-                alert('⚠️ Veuillez entrer une clé API valide');
+                alert('Veuillez entrer une cle API valide');
                 return;
             }
             if (!apiKey.startsWith('pplx-')) {
-                alert('⚠️ La clé API doit commencer par "pplx-"');
+                alert('La cle API doit commencer par "pplx-"');
                 return;
             }
             localStorage.setItem('perplexity_api_key', apiKey);
             closeApiKeyModal();
             updateApiKeyStatus();
-            alert('✅ Clé API enregistrée avec succès !');
+            alert('Cle API enregistree avec succes !');
         }
 
         function updateApiKeyStatus() {
@@ -121,27 +120,34 @@
             if (statusDiv) {
                 const hasKey = getApiKey();
                 statusDiv.innerHTML = hasKey 
-                    ? '<span class="text-green-600">✅ Clé API configurée</span>'
-                    : '<span class="text-yellow-600">⚠️ Clé API non configurée - Cliquez sur le bouton ci-dessus</span>';
+                    ? '<span class="text-green-600">Cle API configuree</span>'
+                    : '<span class="text-yellow-600">Cle API non configuree - Cliquez sur le bouton ci-dessus</span>';
             }
         }
 
         function deleteApiKey() {
-            if (confirm('⚠️ Voulez-vous vraiment supprimer la clé API ?')) {
+            if (confirm('Voulez-vous vraiment supprimer la cle API ?')) {
                 localStorage.removeItem('perplexity_api_key');
                 updateApiKeyStatus();
-                alert('✅ Clé API supprimée');
+                alert('Cle API supprimee');
             }
         }
 
-        async function callPerplexityAPI(prompt) {
+        async function callPerplexityAPI(prompt, imageBase64 = null) {
             const apiKey = getApiKey();
             if (!apiKey) {
-                if (confirm('⚠️ Clé API non configurée\n\nVoulez-vous la configurer maintenant ?')) {
+                if (confirm('Cle API non configuree. Voulez-vous la configurer maintenant ?')) {
                     showApiKeyModal();
                 }
-                throw new Error('Clé API non configurée');
+                throw new Error('Cle API non configuree');
             }
+
+            const messageContent = imageBase64 
+                ? [
+                    { type: "image_url", image_url: { url: imageBase64 } },
+                    { type: "text", text: prompt }
+                  ]
+                : prompt;
 
             const response = await fetch("https://api.perplexity.ai/chat/completions", {
                 method: "POST",
@@ -151,14 +157,14 @@
                 },
                 body: JSON.stringify({
                     model: "sonar-pro",
-                    messages: [{ role: "user", content: prompt }],
+                    messages: [{ role: "user", content: messageContent }],
                     max_tokens: 2000,
                     temperature: 0.1
                 })
             });
 
             if (!response.ok) {
-                if (response.status === 401) throw new Error('Clé API invalide');
+                if (response.status === 401) throw new Error('Cle API invalide');
                 throw new Error(`Erreur API: ${response.status}`);
             }
 
@@ -199,19 +205,12 @@
             render();
 
             try {
-                const prompt = `Tu es un expert du robot cuiseur COMPACT COOK. Analyse cette recette et adapte-la pour le Compact Cook (robot multifonction avec bol, lames, température et vitesse réglables).
+                const prompt = `Tu es un expert du robot cuiseur COMPACT COOK. Analyse cette recette et adapte-la pour le Compact Cook.
 
-RECETTE À ANALYSER:
-${state.recipeText}
+RECETTE: ${state.recipeText}
 
-IMPORTANT: Le Compact Cook est un ROBOT CUISEUR multifonction similaire au Thermomix. Adapte TOUTES les étapes pour utiliser:
-- Les VITESSES (1-10) pour mixer, hacher, pétrir, émulsionner
-- Les TEMPÉRATURES (jusqu'à 130°C) pour cuire, mijoter, faire revenir
-- Le BOL du robot pour tout préparer dedans
-- Les accessoires: panier vapeur, batteur, spatule
-
-Retourne UNIQUEMENT ce JSON (pas de markdown, pas d'explication):
-{"name":"Nom de la recette","basePortions":4,"prepTime":15,"cookTime":30,"difficulty":"Facile","ingredients":[{"name":"Tomate","amount":200,"unit":"g","emoji":"🍅"}],"steps":[{"number":1,"title":"Préparation des ingrédients","description":"Mettre les oignons dans le bol, hacher 5 sec vitesse 5","time":"5 sec","temp":"","speed":"5","accessory":"","note":""},{"number":2,"title":"Cuisson","description":"Ajouter huile, faire revenir 3 min 100°C vitesse 1","time":"3 min","temp":"100°C","speed":"1","accessory":"","note":""}],"tips":["Conseil pour le Compact Cook"]}`;
+Retourne UNIQUEMENT ce JSON:
+{"name":"Nom","basePortions":4,"prepTime":15,"cookTime":30,"difficulty":"Facile","ingredients":[{"name":"Tomate","amount":200,"unit":"g","emoji":"🍅"}],"steps":[{"number":1,"title":"Preparation","description":"Mettre ingredients, hacher 5 sec vitesse 5","time":"5 sec","temp":"","speed":"5"}],"tips":["Conseil"]}`;
 
                 const response = await callPerplexityAPI(prompt);
                 const recipe = extractJSON(response);
@@ -232,18 +231,10 @@ Retourne UNIQUEMENT ce JSON (pas de markdown, pas d'explication):
             render();
 
             try {
-                const prompt = `Tu es un expert du robot cuiseur COMPACT COOK. Crée une recette complète de "${recipeName}" adaptée pour le Compact Cook (robot multifonction avec bol, lames, température et vitesse).
+                const prompt = `Tu es un expert Compact Cook. Cree une recette de "${recipeName}".
 
-IMPORTANT: Le Compact Cook est un ROBOT CUISEUR multifonction comme le Thermomix. Utilise:
-- VITESSES (1-10): 1-2 pour mélanger, 3-5 pour hacher/pétrir, 6-8 pour mixer, 9-10 pour pulvériser
-- TEMPÉRATURES (jusqu'à 130°C): Varoma/100°C pour vapeur, 80-90°C pour mijoter, 100-120°C pour faire revenir
-- TOUT se fait dans le BOL du robot
-- Accessoires: panier vapeur, batteur, spatule, couteau
-
-TOUTES les étapes doivent utiliser le robot (vitesse + température si besoin).
-
-Retourne UNIQUEMENT ce JSON (pas de markdown):
-{"name":"${recipeName}","basePortions":4,"prepTime":20,"cookTime":40,"difficulty":"Moyen","ingredients":[{"name":"Ingrédient","amount":500,"unit":"g","emoji":"🥕"}],"steps":[{"number":1,"title":"Préparation dans le bol","description":"Mettre les ingrédients dans le bol, hacher 10 sec vitesse 5","time":"10 sec","temp":"","speed":"5","accessory":"","note":""},{"number":2,"title":"Cuisson","description":"Cuire 20 min 100°C vitesse 1 sens inverse","time":"20 min","temp":"100°C","speed":"1","accessory":"","note":"Utiliser le gobelet doseur"}],"tips":["Astuce pour le Compact Cook"]}`;
+Retourne UNIQUEMENT ce JSON:
+{"name":"${recipeName}","basePortions":4,"prepTime":20,"cookTime":40,"difficulty":"Moyen","ingredients":[{"name":"Ingredient","amount":500,"unit":"g","emoji":"🥕"}],"steps":[{"number":1,"title":"Etape","description":"Instructions","time":"10 sec","temp":"","speed":"5"}],"tips":["Astuce"]}`;
 
                 const response = await callPerplexityAPI(prompt);
                 const recipe = extractJSON(response);
@@ -257,12 +248,197 @@ Retourne UNIQUEMENT ce JSON (pas de markdown):
             }
         }
 
+        async function startCamera() {
+            state.showCamera = true;
+            state.error = '';
+            render();
+
+            try {
+                const video = document.getElementById('cameraVideo');
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' }
+                });
+                video.srcObject = stream;
+                video.play();
+            } catch (err) {
+                state.error = 'Impossible d\'acceder a la camera';
+                state.showCamera = false;
+                render();
+            }
+        }
+
+        function cancelCamera() {
+            state.showCamera = false;
+            const video = document.getElementById('cameraVideo');
+            const stream = video?.srcObject;
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            render();
+        }
+
+        async function capturePhoto() {
+            try {
+                const video = document.getElementById('cameraVideo');
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0);
+                
+                const imageBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                state.capturedImage = imageBase64;
+                state.showCamera = false;
+                
+                const stream = video.srcObject;
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+                
+                await analyzeImage();
+            } catch (err) {
+                state.error = `Erreur capture: ${err.message}`;
+                render();
+            }
+        }
+
+        async function analyzeImage() {
+            state.isLoading = true;
+            state.error = '';
+            render();
+
+            try {
+                const prompt = `Analyse cette photo et identifie TOUS les ingredients visibles. Retourne UNIQUEMENT ce JSON: {"ingredients":[{"name":"Tomate","quantity":"3","unit":"piece(s)","emoji":"🍅"}]}`;
+
+                const response = await callPerplexityAPI(prompt, state.capturedImage);
+                const data = extractJSON(response);
+                state.detectedIngredients = data.ingredients || [];
+                
+                if (state.detectedIngredients.length === 0) {
+                    throw new Error('Aucun ingredient detecte');
+                }
+                
+            } catch (err) {
+                state.error = `Erreur analyse: ${err.message}`;
+                state.capturedImage = null;
+            } finally {
+                state.isLoading = false;
+                render();
+            }
+        }
+
+        function removeIngredient(index) {
+            state.detectedIngredients.splice(index, 1);
+            render();
+        }
+
+        function addManualIngredient() {
+            const name = prompt('Nom de l\'ingredient:');
+            if (!name) return;
+            
+            const quantity = prompt('Quantite:') || 'quelques';
+            const unit = prompt('Unite:') || 'piece(s)';
+            
+            state.detectedIngredients.push({
+                name: name,
+                quantity: quantity,
+                unit: unit,
+                emoji: '🥘'
+            });
+            render();
+        }
+
+        async function generateRecipesFromIngredients() {
+            state.isLoading = true;
+            state.error = '';
+            render();
+
+            try {
+                const ingredientsList = state.detectedIngredients
+                    .map(ing => `${ing.quantity} ${ing.unit} ${ing.name}`)
+                    .join(', ');
+
+                const prompt = `Avec ces ingredients: ${ingredientsList}. Propose 3 recettes Compact Cook. Retourne UNIQUEMENT ce JSON: {"recipes":[{"name":"Recette 1","description":"Description","difficulty":"Facile","time":"30 min","emoji":"🍝"}]}`;
+
+                const response = await callPerplexityAPI(prompt);
+                const data = extractJSON(response);
+                state.proposedRecipes = data.recipes || [];
+                
+                if (state.proposedRecipes.length === 0) {
+                    throw new Error('Impossible de generer des recettes');
+                }
+                
+            } catch (err) {
+                state.error = `Erreur: ${err.message}`;
+            } finally {
+                state.isLoading = false;
+                render();
+            }
+        }
+
+        async function selectProposedRecipe(recipeName) {
+            const ingredientsList = state.detectedIngredients
+                .map(ing => `${ing.quantity} ${ing.unit} ${ing.name}`)
+                .join(', ');
+
+            state.isLoading = true;
+            render();
+
+            try {
+                const prompt = `Cree une recette complete de "${recipeName}" avec ces ingredients: ${ingredientsList}. Retourne UNIQUEMENT ce JSON: {"name":"${recipeName}","basePortions":4,"prepTime":20,"cookTime":40,"difficulty":"Moyen","ingredients":[{"name":"Ingredient","amount":500,"unit":"g","emoji":"🥕"}],"steps":[{"number":1,"title":"Etape","description":"Instructions","time":"10 sec","temp":"","speed":"5"}],"tips":["Astuce"]}`;
+
+                const response = await callPerplexityAPI(prompt);
+                const recipe = extractJSON(response);
+                state.currentRecipe = recipe;
+                state.portions = recipe.basePortions || 4;
+                state.capturedImage = null;
+                state.detectedIngredients = [];
+                state.proposedRecipes = [];
+            } catch (err) {
+                state.error = `Erreur: ${err.message}`;
+            } finally {
+                state.isLoading = false;
+                render();
+            }
+        }
+
+        function resetPhotoMode() {
+            state.capturedImage = null;
+            state.detectedIngredients = [];
+            state.proposedRecipes = [];
+            render();
+        }
+
         function calculateIngredients(recipe, targetPortions) {
             const ratio = targetPortions / (recipe.basePortions || 4);
             return recipe.ingredients.map(ing => ({
                 ...ing,
                 adjustedAmount: Math.round(ing.amount * ratio * 10) / 10
             }));
+        }
+
+        function resetApp() {
+            state.currentRecipe = null;
+            state.recipeText = '';
+            state.error = '';
+            state.portions = 4;
+            state.capturedImage = null;
+            state.detectedIngredients = [];
+            state.proposedRecipes = [];
+            state.showCamera = false;
+            render();
+        }
+
+        function increasePortions() {
+            state.portions++;
+            render();
+        }
+
+        function decreasePortions() {
+            if (state.portions > 1) {
+                state.portions--;
+                render();
+            }
         }
 
         function renderLoading() {
@@ -275,7 +451,7 @@ Retourne UNIQUEMENT ce JSON (pas de markdown):
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
                         </div>
-                        <h2 class="text-2xl font-bold text-gray-800 mb-3">Génération de recette...</h2>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-3">Generation de recette...</h2>
                         <p class="text-gray-600">Cela peut prendre quelques secondes</p>
                     </div>
                 </div>
@@ -283,14 +459,112 @@ Retourne UNIQUEMENT ce JSON (pas de markdown):
         }
 
         function renderHome() {
+            if (state.showCamera) {
+                return `
+                    <div class="min-h-screen bg-black flex flex-col">
+                        <div class="flex-1 relative">
+                            <video id="cameraVideo" class="w-full h-full object-cover" autoplay playsinline></video>
+                            <div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
+                                <div class="flex items-center justify-center gap-4">
+                                    <button onclick="cancelCamera()" class="bg-red-500 text-white px-6 py-3 rounded-full font-bold">Annuler</button>
+                                    <button onclick="capturePhoto()" class="bg-white text-gray-900 w-20 h-20 rounded-full font-bold text-2xl shadow-2xl hover:scale-110 transition">📸</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (state.detectedIngredients.length > 0 && !state.proposedRecipes.length) {
+                return `
+                    <div class="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-red-500 p-3 sm:p-6">
+                        <div class="max-w-4xl mx-auto">
+                            <div class="bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden">
+                                <div class="bg-gradient-to-r from-green-500 to-teal-600 p-4 sm:p-8 text-white">
+                                    <button onclick="resetPhotoMode()" class="mb-3 bg-white/20 hover:bg-white/30 px-3 py-2 rounded-lg text-sm">Retour</button>
+                                    <h1 class="text-2xl sm:text-4xl font-bold mb-2">Ingredients detectes</h1>
+                                    <p class="text-sm sm:text-lg opacity-90">Verifiez et modifiez si necessaire</p>
+                                </div>
+
+                                ${state.capturedImage ? `
+                                    <div class="p-4 bg-gray-50">
+                                        <img src="${state.capturedImage}" class="w-full max-h-64 object-cover rounded-xl shadow-lg" alt="Photo">
+                                    </div>
+                                ` : ''}
+
+                                <div class="p-4 sm:p-6">
+                                    <div class="mb-4 flex justify-between items-center">
+                                        <h2 class="text-xl font-bold text-gray-800">Liste des ingredients</h2>
+                                        <button onclick="addManualIngredient()" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-600">Ajouter</button>
+                                    </div>
+
+                                    <div class="grid gap-2 mb-6">
+                                        ${state.detectedIngredients.map((ing, idx) => `
+                                            <div class="bg-gradient-to-r from-green-50 to-teal-50 p-3 rounded-xl border-2 border-green-300 flex items-center justify-between">
+                                                <div class="flex items-center gap-3">
+                                                    <span class="text-2xl">${ing.emoji}</span>
+                                                    <div>
+                                                        <div class="font-bold text-gray-800">${ing.name}</div>
+                                                        <div class="text-sm text-gray-600">${ing.quantity} ${ing.unit}</div>
+                                                    </div>
+                                                </div>
+                                                <button onclick="removeIngredient(${idx})" class="text-red-500 hover:text-red-700 text-xl">🗑️</button>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+
+                                    <button onclick="generateRecipesFromIngredients()" class="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white py-4 rounded-xl text-lg font-bold hover:scale-105 transition shadow-lg">
+                                        Proposer des recettes
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (state.proposedRecipes.length > 0) {
+                return `
+                    <div class="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-red-500 p-3 sm:p-6">
+                        <div class="max-w-4xl mx-auto">
+                            <div class="bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden">
+                                <div class="bg-gradient-to-r from-orange-500 to-red-600 p-4 sm:p-8 text-white">
+                                    <button onclick="resetPhotoMode()" class="mb-3 bg-white/20 hover:bg-white/30 px-3 py-2 rounded-lg text-sm">Nouvelle recherche</button>
+                                    <h1 class="text-2xl sm:text-4xl font-bold mb-2">Recettes suggerees</h1>
+                                    <p class="text-sm sm:text-lg opacity-90">Choisissez votre recette</p>
+                                </div>
+
+                                <div class="p-4 sm:p-6">
+                                    <div class="grid gap-4">
+                                        ${state.proposedRecipes.map(recipe => `
+                                            <button onclick="selectProposedRecipe('${recipe.name}')" class="bg-gradient-to-br from-orange-100 to-pink-100 p-4 sm:p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all hover:scale-105 text-left border-2 border-orange-300">
+                                                <div class="flex items-start gap-4">
+                                                    <div class="text-4xl sm:text-6xl">${recipe.emoji}</div>
+                                                    <div class="flex-1">
+                                                        <h3 class="text-lg sm:text-2xl font-bold text-gray-800 mb-2">${recipe.name}</h3>
+                                                        <p class="text-sm text-gray-700 mb-3">${recipe.description}</p>
+                                                        <div class="flex flex-wrap gap-2">
+                                                            <span class="bg-blue-500 text-white px-3 py-1 rounded-full text-xs">${recipe.time}</span>
+                                                            <span class="bg-purple-500 text-white px-3 py-1 rounded-full text-xs">${recipe.difficulty}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
             return `
                 <div class="min-h-screen bg-gradient-to-br from-purple-600 via-pink-500 to-red-500 p-3 sm:p-6">
                     <div class="max-w-6xl mx-auto">
                         <div class="bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden">
                             <div class="bg-gradient-to-r from-pink-500 to-purple-600 p-4 sm:p-10 text-white text-center">
-                                <svg class="w-12 h-12 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                                </svg>
+                                <div class="text-5xl mb-3">🍳</div>
                                 <h1 class="text-2xl sm:text-5xl font-bold mb-2 sm:mb-3">Compact Cook</h1>
                                 <p class="text-sm sm:text-xl opacity-90">Transformez vos recettes</p>
                             </div>
@@ -299,35 +573,50 @@ Retourne UNIQUEMENT ce JSON (pas de markdown):
                                 <div class="mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-xl border-2 border-yellow-300">
                                     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                                         <div class="flex-1">
-                                            <h3 class="text-lg font-bold text-gray-800 mb-1">🔑 Configuration API</h3>
+                                            <h3 class="text-lg font-bold text-gray-800 mb-1">Configuration API</h3>
                                             <div id="apiKeyStatus" class="text-sm"></div>
                                         </div>
                                         <div class="flex gap-2">
-                                            <button onclick="showApiKeyModal()" class="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:scale-105 transition whitespace-nowrap">🔑 Configurer clé API</button>
-                                            ${getApiKey() ? '<button onclick="deleteApiKey()" class="bg-red-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-red-600 transition">🗑️</button>' : ''}
+                                            <button onclick="showApiKeyModal()" class="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:scale-105 transition whitespace-nowrap">Configurer cle API</button>
+                                            ${getApiKey() ? '<button onclick="deleteApiKey()" class="bg-red-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-red-600 transition">Supprimer</button>' : ''}
                                         </div>
                                     </div>
+                                </div>
+
+                                <div class="mb-6 bg-gradient-to-r from-green-50 to-teal-50 p-4 sm:p-6 rounded-xl border-2 border-green-400">
+                                    <div class="flex items-center gap-2 mb-3">
+                                        <div class="text-2xl">📷</div>
+                                        <h2 class="text-lg sm:text-2xl font-bold text-gray-800">Scanner mes Ingredients</h2>
+                                    </div>
+                                    
+                                    <div class="bg-green-100 border-2 border-green-500 rounded-lg p-3 mb-3 text-xs sm:text-sm">
+                                        <span class="font-semibold">Prenez une photo de vos aliments et l'IA vous proposera des recettes !</span>
+                                    </div>
+                                    
+                                    <button onclick="startCamera()" class="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white px-4 py-4 rounded-lg text-base sm:text-lg font-bold hover:scale-105 transition shadow-lg">
+                                        Ouvrir l'appareil photo
+                                    </button>
                                 </div>
 
                                 <div class="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 p-4 sm:p-6 rounded-xl">
                                     <div class="flex items-center gap-2 mb-3">
-                                        <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v10a2 2 0 01-2 2h-2m-4-4l-4 4m0 0l4 4m-4-4h12" /></svg>
+                                        <div class="text-2xl">📋</div>
                                         <h2 class="text-lg sm:text-2xl font-bold text-gray-800">Copier-Coller Recette</h2>
                                     </div>
                                     
                                     <div class="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-2 mb-3 text-xs sm:text-sm">
-                                        <span class="font-semibold">📋 Copiez le contenu de votre recette puis collez ici</span>
+                                        <span class="font-semibold">Copiez le contenu de votre recette puis collez ici</span>
                                     </div>
                                     
                                     <textarea id="recipeText" placeholder="Collez ici le contenu complet..." class="w-full h-32 sm:h-40 p-3 border-2 border-blue-300 rounded-lg focus:border-blue-500 outline-none text-sm resize-y mb-3"></textarea>
                                     
-                                    <button onclick="analyzeRecipeText()" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-3 rounded-lg text-sm font-bold hover:scale-105 transition">🔄 Extraire la recette</button>
+                                    <button onclick="analyzeRecipeText()" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-3 rounded-lg text-sm font-bold hover:scale-105 transition">Extraire la recette</button>
                                 </div>
 
-                                ${state.error ? `<div class="mb-4 bg-red-50 border-2 border-red-300 rounded-lg p-3 text-red-700 text-sm"><span class="mr-2">⚠️</span>${state.error}</div>` : ''}
+                                ${state.error ? `<div class="mb-4 bg-red-50 border-2 border-red-300 rounded-lg p-3 text-red-700 text-sm"><span class="mr-2">⚠</span>${state.error}</div>` : ''}
 
                                 <div>
-                                    <h2 class="text-xl font-bold mb-4 text-gray-800">🔥 Recettes populaires</h2>
+                                    <h2 class="text-xl font-bold mb-4 text-gray-800">Recettes populaires</h2>
                                     <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
                                         ${popularRecipes.map(recipe => `
                                             <button onclick="searchRecipeByName('${recipe.name}')" class="bg-gradient-to-br from-orange-100 to-pink-100 p-3 sm:p-6 rounded-xl shadow-lg hover:shadow-2xl transition-all hover:scale-105 text-left">
@@ -353,14 +642,14 @@ Retourne UNIQUEMENT ce JSON (pas de markdown):
                     <div class="max-w-5xl mx-auto">
                         <div class="bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden">
                             <div class="bg-gradient-to-r from-pink-500 to-purple-600 p-4 sm:p-8 text-white">
-                                <button onclick="resetApp()" class="mb-3 bg-white/20 hover:bg-white/30 px-3 py-2 rounded-lg text-sm">← Nouvelle recette</button>
+                                <button onclick="resetApp()" class="mb-3 bg-white/20 hover:bg-white/30 px-3 py-2 rounded-lg text-sm">Nouvelle recette</button>
                                 <h1 class="text-2xl sm:text-4xl font-bold mb-2">${recipe.name}</h1>
                                 <p class="text-sm opacity-90">Recette Compact Cook</p>
                             </div>
 
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 sm:p-6 bg-gray-50">
                                 <div class="text-center">
-                                    <div class="text-xs text-gray-600">Préparation</div>
+                                    <div class="text-xs text-gray-600">Preparation</div>
                                     <div class="font-bold">${recipe.prepTime} min</div>
                                 </div>
                                 <div class="text-center">
@@ -372,13 +661,13 @@ Retourne UNIQUEMENT ce JSON (pas de markdown):
                                     <div class="font-bold">${state.portions} pers.</div>
                                 </div>
                                 <div class="text-center">
-                                    <div class="text-xs text-gray-600">Difficulté</div>
+                                    <div class="text-xs text-gray-600">Difficulte</div>
                                     <div class="font-bold">${recipe.difficulty}</div>
                                 </div>
                             </div>
 
                             <div class="p-4 bg-blue-50">
-                                <h3 class="text-lg font-bold mb-3">🎯 Ajuster les portions</h3>
+                                <h3 class="text-lg font-bold mb-3">Ajuster les portions</h3>
                                 <div class="flex items-center gap-3">
                                     <button onclick="decreasePortions()" class="bg-red-500 text-white w-10 h-10 rounded-full font-bold hover:bg-red-600">-</button>
                                     <div class="flex-1 bg-white rounded-xl p-3 text-center">
@@ -390,7 +679,7 @@ Retourne UNIQUEMENT ce JSON (pas de markdown):
                             </div>
 
                             <div class="p-4 bg-yellow-50">
-                                <h2 class="text-2xl font-bold mb-3 text-pink-600 border-b-4 border-pink-600 pb-2">🛒 Ingrédients</h2>
+                                <h2 class="text-2xl font-bold mb-3 text-pink-600 border-b-4 border-pink-600 pb-2">Ingredients</h2>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     ${adjustedIngredients.map(ing => `
                                         <div class="bg-white p-2 rounded-lg shadow border-l-4 border-purple-500 flex items-center gap-2">
@@ -405,17 +694,17 @@ Retourne UNIQUEMENT ce JSON (pas de markdown):
                             </div>
 
                             <div class="p-4">
-                                <h2 class="text-2xl font-bold mb-3 text-pink-600 border-b-4 border-pink-600 pb-2">👨‍🍳 Préparation</h2>
+                                <h2 class="text-2xl font-bold mb-3 text-pink-600 border-b-4 border-pink-600 pb-2">Preparation</h2>
                                 <div class="space-y-3">
                                     ${recipe.steps.map((step, idx) => `
                                         <div class="bg-gradient-to-r from-orange-100 to-pink-100 rounded-xl p-3 relative">
                                             <div class="absolute -top-2 -left-2 bg-pink-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">${step.number || idx + 1}</div>
                                             <div class="ml-5">
-                                                <h3 class="font-bold text-gray-800 mb-2">${step.title || 'Étape'}</h3>
+                                                <h3 class="font-bold text-gray-800 mb-2">${step.title || 'Etape'}</h3>
                                                 <p class="text-sm text-gray-700 mb-2">${step.description || ''}</p>
-                                                ${step.time ? `<span class="bg-blue-500 text-white px-2 py-1 rounded-full text-xs">⏱️ ${step.time}</span>` : ''}
-                                                ${step.temp ? `<span class="bg-red-500 text-white px-2 py-1 rounded-full text-xs ml-1">🌡️ ${step.temp}</span>` : ''}
-                                                ${step.speed ? `<span class="bg-teal-500 text-white px-2 py-1 rounded-full text-xs ml-1">⚡ Vit. ${step.speed}</span>` : ''}
+                                                ${step.time ? `<span class="bg-blue-500 text-white px-2 py-1 rounded-full text-xs">${step.time}</span>` : ''}
+                                                ${step.temp ? `<span class="bg-red-500 text-white px-2 py-1 rounded-full text-xs ml-1">${step.temp}</span>` : ''}
+                                                ${step.speed ? `<span class="bg-teal-500 text-white px-2 py-1 rounded-full text-xs ml-1">Vit. ${step.speed}</span>` : ''}
                                             </div>
                                         </div>
                                     `).join('')}
@@ -424,14 +713,14 @@ Retourne UNIQUEMENT ce JSON (pas de markdown):
 
                             ${recipe.tips && recipe.tips.length > 0 ? `
                                 <div class="p-4 bg-green-50">
-                                    <h2 class="text-xl font-bold mb-3 text-green-700">💡 Astuces</h2>
-                                    ${recipe.tips.map(tip => `<div class="bg-white p-2 rounded-lg shadow mb-2 border-l-4 border-green-500"><span class="mr-2">💡</span><span class="text-sm">${tip}</span></div>`).join('')}
+                                    <h2 class="text-xl font-bold mb-3 text-green-700">Astuces</h2>
+                                    ${recipe.tips.map(tip => `<div class="bg-white p-2 rounded-lg shadow mb-2 border-l-4 border-green-500"><span class="text-sm">${tip}</span></div>`).join('')}
                                 </div>
                             ` : ''}
 
                             <div class="p-4 bg-gray-50 flex gap-3">
-                                <button onclick="resetApp()" class="flex-1 bg-gray-400 text-white py-3 rounded-xl font-bold hover:scale-105 transition">← Nouvelle recette</button>
-                                <button onclick="window.print()" class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-xl font-bold hover:scale-105 transition">🖨️ Imprimer</button>
+                                <button onclick="resetApp()" class="flex-1 bg-gray-400 text-white py-3 rounded-xl font-bold hover:scale-105 transition">Nouvelle recette</button>
+                                <button onclick="window.print()" class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-xl font-bold hover:scale-105 transition">Imprimer</button>
                             </div>
                         </div>
                     </div>
@@ -457,26 +746,6 @@ Retourne UNIQUEMENT ce JSON (pas de markdown):
             }
             
             updateApiKeyStatus();
-        }
-
-        function resetApp() {
-            state.currentRecipe = null;
-            state.recipeText = '';
-            state.error = '';
-            state.portions = 4;
-            render();
-        }
-
-        function increasePortions() {
-            state.portions++;
-            render();
-        }
-
-        function decreasePortions() {
-            if (state.portions > 1) {
-                state.portions--;
-                render();
-            }
         }
 
         window.addEventListener('load', render);
